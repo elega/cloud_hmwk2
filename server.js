@@ -8,6 +8,7 @@ var es_client = require('./es_client.js');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+var cursocket;
 
 es_client.connect();
 
@@ -47,8 +48,8 @@ router.post('/callback', function (req, res) {
         else
         { 
           var msg = message.Message;
-          console.log(msg);
           var new_tweet =JSON.parse(msg);
+          io.emit('newmarker', new_tweet);
           es_client.insert_tweet(new_tweet);
         }
     });
@@ -62,23 +63,16 @@ router.get('/', function (req, res) {
 
 });
 
-  var timer = setInterval(myTimer, 5000);
-  function myTimer() {
-    console.log('send socket');
-    io.on('connection', function (socket) {
-      socket.emit('newmarker', { hello: 'world' });
-    });
-  };  
-
-router.get('/subscribe', function (req, res) {
-  res.send('Subscribe Topic');
+//var j = 0;
+//router.get('/subscribe', function (req, res) {
+  //res.send('Subscribe Topic');
 
   var AWS = require('aws-sdk');
 
 
   AWS.config.update({
-    accessKeyId: '*',
-    secretAccessKey: '*',
+    accessKeyId: 'accessKeyId',
+    secretAccessKey: 'secretAccessKey',
     region: 'us-east-1'
   });
 
@@ -86,8 +80,8 @@ router.get('/subscribe', function (req, res) {
 
   var subscribe_params = {
     Protocol: 'http', /* required */
-    TopicArn: 'arn:aws:sns:us-east-1:462504581059:tweet_alchemy', /* required */
-    Endpoint: '*'
+    TopicArn: 'TopicArn', /* required */
+    Endpoint: 'Endpoint/callback'
   };
 
   sns.subscribe(subscribe_params, function(err, data) {
@@ -97,7 +91,7 @@ router.get('/subscribe', function (req, res) {
     }
   });
 
-});
+//});
 
 
 router.get("/ajax"  ,function(req, res) {
